@@ -6,7 +6,7 @@
  *
  */
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 
 import {
   Animated,
@@ -41,6 +41,7 @@ type Props = {
   delayLongPress: number;
   swipeToCloseEnabled?: boolean;
   doubleTapToZoomEnabled?: boolean;
+  isFocused?: boolean;
 };
 
 const ImageItem = ({
@@ -51,6 +52,7 @@ const ImageItem = ({
   delayLongPress,
   swipeToCloseEnabled = true,
   doubleTapToZoomEnabled = true,
+  isFocused = true,
 }: Props) => {
   const scrollViewRef = useRef<ScrollView>(null);
   const [loaded, setLoaded] = useState(false);
@@ -62,7 +64,7 @@ const ImageItem = ({
   const scrollValueY = new Animated.Value(0);
   const scaleValue = new Animated.Value(scale || 1);
   const translateValue = new Animated.ValueXY(translate);
-  const maxScale = scale && scale > 0 ? Math.max(1 / scale, 1) : 1;
+  const maxScale = scale && scale > 0 ? Math.max(1 / scale, 2) : 1;
 
   const imageOpacity = scrollValueY.interpolate({
     inputRange: [-SWIPE_CLOSE_OFFSET, 0, SWIPE_CLOSE_OFFSET],
@@ -112,6 +114,23 @@ const ImageItem = ({
     },
     [imageSrc, onLongPress]
   );
+
+  useEffect(() => {
+    if (!isFocused) {
+      setScaled(false);
+      onZoom(false);
+      if (scrollViewRef.current) {
+        const scrollResponder = scrollViewRef.current.getScrollResponder();
+        scrollResponder?.scrollResponderZoomTo({
+          x: 0,
+          y: 0,
+          width: SCREEN_WIDTH,
+          height: SCREEN_HEIGHT,
+          animated: false,
+        });
+      }
+    }
+  }, [isFocused]);
 
   return (
     <View>

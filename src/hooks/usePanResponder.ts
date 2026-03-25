@@ -50,7 +50,7 @@ const usePanResponder = ({
   onLongPress,
   delayLongPress,
 }: Props): Readonly<
-  [GestureResponderHandlers, Animated.Value, Animated.ValueXY]
+  [GestureResponderHandlers, Animated.Value, Animated.ValueXY, () => void]
 > => {
   let numberInitialTouches = 1;
   let initialTouches: NativeTouchEvent[] = [];
@@ -70,6 +70,8 @@ const usePanResponder = ({
     initialTranslate,
     SCREEN
   );
+
+  const maxScale = Math.max(initialScale * 2, SCALE_MAX);
 
   const getBounds = (scale: number) => {
     const scaledImageDimensions = {
@@ -154,7 +156,7 @@ const usePanResponder = ({
       if (doubleTapToZoomEnabled && isDoubleTapPerformed) {
         const isScaled = currentTranslate.x !== initialTranslate.x; // currentScale !== initialScale;
         const { pageX: touchX, pageY: touchY } = event.nativeEvent.touches[0];
-        const targetScale = SCALE_MAX;
+        const targetScale = maxScale;
         const nextScale = isScaled ? initialScale : targetScale;
         const nextTranslate = isScaled
           ? initialTranslate
@@ -332,8 +334,8 @@ const usePanResponder = ({
       }
 
       if (tmpScale > 0) {
-        if (tmpScale < initialScale || tmpScale > SCALE_MAX) {
-          tmpScale = tmpScale < initialScale ? initialScale : SCALE_MAX;
+        if (tmpScale < initialScale || tmpScale > maxScale) {
+          tmpScale = tmpScale < initialScale ? initialScale : maxScale;
           Animated.timing(scaleValue, {
             toValue: tmpScale,
             duration: 100,
@@ -391,7 +393,14 @@ const usePanResponder = ({
 
   const panResponder = useMemo(() => createPanResponder(handlers), [handlers]);
 
-  return [panResponder.panHandlers, scaleValue, translateValue];
+  const reset = () => {
+    scaleValue.setValue(initialScale);
+    translateValue.setValue(initialTranslate);
+    currentScale = initialScale;
+    currentTranslate = initialTranslate;
+  };
+
+  return [panResponder.panHandlers, scaleValue, translateValue, reset];
 };
 
 export default usePanResponder;
