@@ -18,6 +18,7 @@
   ],
   "scripts": {
     "build": "tsc",
+    "prepare": "tsc",
     "postversion": "yarn build"
   },
   "peerDependencies": {
