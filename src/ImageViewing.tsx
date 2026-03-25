@@ -69,7 +69,7 @@ function ImageViewing({
 }: Props) {
   const imageList = useRef<VirtualizedList<ImageSource>>(null);
   const [opacity, onRequestCloseEnhanced] = useRequestClose(onRequestClose);
-  const [currentImageIndex, onScroll] = useImageIndexChange(imageIndex, SCREEN);
+  const [currentImageIndex, onScroll, setImageIndex] = useImageIndexChange(imageIndex, SCREEN);
   const [headerTransform, footerTransform, toggleBarsVisible] =
     useAnimatedComponents();
 
@@ -78,6 +78,11 @@ function ImageViewing({
       onImageIndexChange(currentImageIndex);
     }
   }, [currentImageIndex]);
+
+  useEffect(() => {
+    imageList.current?.scrollToIndex({ index: imageIndex, animated: true });
+    setImageIndex(imageIndex);
+  }, [imageIndex]);
 
   const onZoom = useCallback(
     (isScaled: boolean) => {
@@ -131,7 +136,7 @@ function ImageViewing({
             offset: SCREEN_WIDTH * index,
             index,
           })}
-          renderItem={({ item: imageSrc }) => (
+          renderItem={({ item: imageSrc, index }) => (
             <ImageItem
               onZoom={onZoom}
               imageSrc={imageSrc}
@@ -140,6 +145,7 @@ function ImageViewing({
               delayLongPress={delayLongPress}
               swipeToCloseEnabled={swipeToCloseEnabled}
               doubleTapToZoomEnabled={doubleTapToZoomEnabled}
+              isFocused={currentImageIndex === index}
             />
           )}
           onMomentumScrollEnd={onScroll}
@@ -186,7 +192,7 @@ const styles = StyleSheet.create({
 });
 
 const EnhancedImageViewing = (props: Props) => (
-  <ImageViewing key={props.imageIndex} {...props} />
+  <ImageViewing {...props} />
 );
 
 export default EnhancedImageViewing;

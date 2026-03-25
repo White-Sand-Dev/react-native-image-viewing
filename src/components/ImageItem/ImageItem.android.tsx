@@ -6,7 +6,7 @@
  *
  */
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 
 import {
   Animated,
@@ -39,6 +39,7 @@ type Props = {
   delayLongPress: number;
   swipeToCloseEnabled?: boolean;
   doubleTapToZoomEnabled?: boolean;
+  isFocused?: boolean;
 };
 
 const ImageItem = ({
@@ -49,6 +50,7 @@ const ImageItem = ({
   delayLongPress,
   swipeToCloseEnabled = true,
   doubleTapToZoomEnabled = true,
+  isFocused = true,
 }: Props) => {
   const imageContainer = useRef<ScrollView & NativeMethodsMixin>(null);
   const imageDimensions = useImageDimensions(imageSrc);
@@ -73,7 +75,7 @@ const ImageItem = ({
     onLongPress(imageSrc);
   }, [imageSrc, onLongPress]);
 
-  const [panHandlers, scaleValue, translateValue] = usePanResponder({
+  const [panHandlers, scaleValue, translateValue, reset] = usePanResponder({
     initialScale: scale || 1,
     initialTranslate: translate || { x: 0, y: 0 },
     onZoom: onZoomPerformed,
@@ -81,6 +83,13 @@ const ImageItem = ({
     onLongPress: onLongPressHandler,
     delayLongPress,
   });
+
+  useEffect(() => {
+    if (!isFocused) {
+      reset();
+      onZoomPerformed(false);
+    }
+  }, [isFocused]);
 
   const imagesStyles = getImageStyles(
     imageDimensions,
